@@ -138,7 +138,10 @@ export class Rect {
     draw(ctx: CanvasRenderingContext2D, deltaTime: number) {
         ctx.beginPath();
         ctx.fillStyle = "#1a1a1abb";
-        ctx.strokeStyle = "#ffffff";
+        if (this.mat == 3){
+            ctx.fillStyle = "#1a1a1a"
+        }
+            ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 3;
         ctx.roundRect(this.x, this.y, this.w, this.h, 4)
 
@@ -152,10 +155,10 @@ export class Rect {
         ctx.font = "20px Arial";
         const L = (this.w / 100).toFixed(2);
         const h = (this.h / 100).toFixed(2);
-        const Ltext = ctx.measureText(L+"m");
-        const htext = ctx.measureText(h+"m");
-        ctx.fillText(L+"m", this.x + this.w / 2 - Ltext.width / 2, this.y - 10)
-        ctx.fillText(h+"m", this.x - htext.width , this.y + this.h/2)
+        const Ltext = ctx.measureText(L + "m");
+        const htext = ctx.measureText(h + "m");
+        ctx.fillText(L + "m", this.x + this.w / 2 - Ltext.width / 2, this.y - 10)
+        ctx.fillText(h + "m", this.x - htext.width, this.y + this.h / 2)
     }
 
 }
