@@ -1,12 +1,15 @@
+import { lights, rects } from "./elements";
 import { RoomClass } from "./roommain";
 import { distSquare, intersectLines } from "./utility";
+import { onProps } from "./vars";
+import { v4 } from 'uuid';
 
-const PADDING = 50;
 
 export class Rect {
 
     x;
     y;
+    id;
     w;
     h;
     mat: 0 | 1 | 2 | 3 = 1;
@@ -27,6 +30,7 @@ export class Rect {
         this.y = y;
         this.w = w;
         this.h = h;
+        this.id = v4();
     }
 
     inRect(x: number, y: number) {
@@ -90,21 +94,29 @@ export class Rect {
     }
 
     recordClick(btn: 0 | 1 | 2, room: RoomClass) {
-        if (btn == 0 && room.mpos && this.inRect(room.mpos.x, room.mpos.y)) {
-            this.selected = true;
+        if (btn == 0 && room.mpos && this.inRect(room.mpos.x, room.mpos.y) && !onProps) {
+            var holdingLight = false;
+            lights.forEach(light => {
+                if (distSquare(light.initialPosition, room.mpos) < 256) {
+                    holdingLight = true;
+                }
+            })
+            if (!holdingLight) {
+                rects.forEach(rect => rect.selected = false);
+                this.selected = true;
+            }
         } else if (btn == 2) {
             this.selected = false;
         }
     }
 
     recordMovement(room: RoomClass, mpos: { x: number, y: number }) {
-        if (this.selected && room.left) {
+        if (this.selected && room.left && !onProps && !room.placingRect) {
             var delta;
             if (distSquare(this.lastmpos, { x: 0, y: 0 }) == 0) delta = { x: 0, y: 0 };
             else delta = { x: mpos.x - this.lastmpos.x, y: mpos.y - this.lastmpos.y };
             this.x = this.x + delta.x;
             this.y = this.y + delta.y;
-
         }
         this.lastmpos = mpos;
     }
@@ -114,6 +126,13 @@ export class Rect {
             x + w <= this.x ||
             this.y + this.h <= y ||
             y + h <= this.y);
+    }
+
+    recordBackspace() {
+        if (this.selected) {
+            const index = rects.findIndex(rect => rect.id == this.id);
+            rects.splice(index, 1)
+        }
     }
 
     draw(ctx: CanvasRenderingContext2D, deltaTime: number) {

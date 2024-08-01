@@ -1,20 +1,24 @@
+import { v4 } from "uuid";
 import { RoomClass } from "./roommain";
 import { distSquare, reflect, refract } from "./utility";
 import { onProps } from "./vars";
+import { lights } from "./elements";
 
 export class Light {
 
     initialPosition = { x: 0, y: 0 }
-    color = "#66ffbf";
+    color = "#ffffff";
     inside = false;
-    angle = .3;
-    rotation = 210;
-    rays = 3;
+    angle = 0;
+    rotation = Math.PI/2;
+    rays = 1;
+    id;
     selected = false;
 
     lastmpos = { x: 0, y: 0 }
 
     constructor(initialPosition: { x: number, y: number }, initialDirection: { x: number, y: number }) {
+        this.id = v4();
         this.initialPosition = initialPosition;
     }
 
@@ -42,18 +46,18 @@ export class Light {
 
     }
 
-    recordMovement(room : RoomClass, mpos: { x: number, y: number }) {
+    recordMovement(room: RoomClass, mpos: { x: number, y: number }) {
         if (this.selected && room.left && !room.placingRect && !onProps) {
             var delta;
-            if (distSquare(this.lastmpos, {x : 0, y : 0}) == 0) delta = {x : 0, y : 0};
-            else delta = {x : mpos.x - this.lastmpos.x, y : mpos.y - this.lastmpos.y};
+            if (distSquare(this.lastmpos, { x: 0, y: 0 }) == 0) delta = { x: 0, y: 0 };
+            else delta = { x: mpos.x - this.lastmpos.x, y: mpos.y - this.lastmpos.y };
             this.initialPosition = {
-                x : this.initialPosition.x + delta.x,
-                y : this.initialPosition.y + delta.y,
+                x: this.initialPosition.x + delta.x,
+                y: this.initialPosition.y + delta.y,
             }
-            if (room.overlapsRects(this.initialPosition.x-8, this.initialPosition.y-8, 16, 16)){
+            if (room.overlapsRects(this.initialPosition.x - 8, this.initialPosition.y - 8, 16, 16)) {
                 this.inside = true;
-            }else{
+            } else {
                 this.inside = false;
             }
         }
@@ -63,9 +67,17 @@ export class Light {
     recordClick(btn: 0 | 1 | 2, mpos: { x: number, y: number }) {
 
         if (btn == 0 && this.on(mpos)) {
+            lights.forEach(light => light.selected = false);
             this.selected = true;
         } else if (btn == 2) {
             this.selected = false;
+        }
+    }
+
+    recordBackspace() {
+        if (this.selected) {
+            const index = lights.findIndex(light => light.id == this.id);
+            lights.splice(index, 1);
         }
     }
 
@@ -89,13 +101,14 @@ export class Light {
             if (mat == 0 || mat == 2) {
                 var reflection = reflect(direction, normal);
                 if (inside) {
-                    reflection =  reflect(direction, {x : -normal.x, y : -normal.y})               }
+                    reflection = reflect(direction, { x: -normal.x, y: -normal.y })
+                }
                 this.drawLine(ctx, room, end, reflection, limit - 1, inside);
             }
             if (mat == 1 || mat == 2) {
                 var refraction = refract(direction, normal, intersection.refractionIndex);
                 if (inside) {
-                    refraction = refract(direction, {x : -normal.x, y : -normal.y}, intersection.refractionIndex);
+                    refraction = refract(direction, { x: -normal.x, y: -normal.y }, intersection.refractionIndex);
                 }
                 if (refraction) {
                     this.drawLine(ctx, room, end, refraction, limit - 1, !inside)

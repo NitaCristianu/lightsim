@@ -1,4 +1,5 @@
 import { lights, rects } from "./elements";
+import { Light } from "./light";
 import { Rect } from "./rect";
 import { distSquare } from "./utility";
 import { onProps } from "./vars";
@@ -16,6 +17,7 @@ export class RoomClass {
     placingRect = false;
     placingrectx = 0;
     placingrecty = 0;
+    mode_hold = false;
 
     mpos = { x: 0, y: 0 }
 
@@ -51,10 +53,10 @@ export class RoomClass {
         })
 
         lights.forEach(light => {
-            for (let angle = -light.angle + light.rotation; angle <= light.angle + light.rotation; angle += Math.PI / light.rays / light.angle / 40) {
+            for (let angle = -light.angle + light.rotation; angle <= light.angle + light.rotation; angle += Math.PI / light.rays) {
 
-                const x = Math.cos(angle);
-                const y = Math.sin(angle);
+                const x = Math.cos(angle) * 100;
+                const y = Math.sin(angle) * 100;
                 light.drawLine(ctx, this, light.initialPosition, { x, y });
             }
             light.update(ctx);
@@ -99,6 +101,7 @@ export class RoomClass {
 
     isOnGrid(x = this.mpos.x, y = this.mpos.y) {
         if (this.onBorder(x, y)) return false;
+        if (this.mode_hold) return false;
 
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
@@ -148,37 +151,45 @@ export class RoomClass {
 
     }
 
-    recordClick(btn: 0 | 1 | 2, mpos: { x: number, y: number }) {
+    recordClick(btn: 0 | 1 | 2, mpos: { x: number, y: number }, mode: boolean) {
         if (onProps) return;
         const isOnGrid = this.isOnGrid();
 
         lights.forEach(light => light.recordClick(btn, mpos));
         rects.forEach(rect => rect.recordClick(btn, this))
 
+
         if (btn == 0 && isOnGrid) {
-            var { x, y } = mpos;
-            const tlx = Math.min(this.placingrectx, x);
-            const tly = Math.min(this.placingrecty, y);
-            const w = Math.abs(this.placingrectx - x);
-            const h = Math.abs(this.placingrecty - y);
-            const overlaps = this.overlapsRects(
-                tlx, tly, w, h
-            );
-            if (!this.placingRect) {
-                this.placingRect = true;
-                this.placingrectx = mpos.x;
-                this.placingrecty = mpos.y;
+            if (mode == true) {
 
-            } else if (!overlaps) {
-                this.placingRect = false;
-
-                rects.push(new Rect(
+                var { x, y } = mpos;
+                const tlx = Math.min(this.placingrectx, x);
+                const tly = Math.min(this.placingrecty, y);
+                const w = Math.abs(this.placingrectx - x);
+                const h = Math.abs(this.placingrecty - y);
+                const overlaps = this.overlapsRects(
                     tlx, tly, w, h
-                ))
+                );
+                if (!this.placingRect) {
+                    this.placingRect = true;
+                    this.placingrectx = mpos.x;
+                    this.placingrecty = mpos.y;
+
+                } else if (!overlaps) {
+                    this.placingRect = false;
+
+                    rects.push(new Rect(
+                        tlx, tly, w, h
+                    ))
+
+                }
 
             }
-
-        } else if (btn == 2) {
+            if (mode == false) {
+                lights.push(new Light(this.mpos, { x: 1, y: 0 }));
+            }
+        }
+        if (btn == 2) {
             this.placingRect = false;
         }
     }

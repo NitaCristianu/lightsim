@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import { RoomClass } from "../utils/roommain";
 import useAnimationFrame from "../hooks/useFrame";
-import React from "react";
+import { lights, rects } from "../utils/elements";
+import { useAtom } from "jotai";
+import { mode_atom, mode_hold_atom } from "../utils/vars";
 
 export default function Room({ name }: { name: string }) {
 
     const ref = useRef<HTMLCanvasElement>(null);
     const [room] = useState(new RoomClass(name));
+    const [mode_hold] = useAtom(mode_hold_atom);
+    const [mode] = useAtom(mode_atom);
 
     const update = (deltaTime: number) => {
         // every frame
@@ -18,7 +22,11 @@ export default function Room({ name }: { name: string }) {
         if (!ctx) return;
         room.update(ctx, deltaTime);
     }
-    useAnimationFrame(update)
+    useAnimationFrame(update);
+
+    useEffect(() => {
+        room.mode_hold = mode_hold;
+    }, [mode_hold])
 
     useEffect(() => {
         const mouseUp = (event: MouseEvent) => {
@@ -28,7 +36,7 @@ export default function Room({ name }: { name: string }) {
                 room.left = false
         };
         const mouseDown = (event: MouseEvent) => {
-            room.recordClick(event.button as any, { x: event.clientX, y: event.clientY });
+            room.recordClick(event.button as any, { x: event.clientX, y: event.clientY }, mode);
             if (event.button == 2)
                 room.right = true
             if (event.button == 0)
@@ -50,13 +58,21 @@ export default function Room({ name }: { name: string }) {
 
             }
         });
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key == "Backspace") {
+                rects.forEach(rect => rect.recordBackspace())
+                lights.forEach(light => light.recordBackspace());
+            }
+        }
+        window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("mousemove", mouseMove);
         return () => {
             window.removeEventListener("mouseup", mouseUp);
+            window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("mousedown", mouseDown);
             window.removeEventListener("mousemove", mouseMove);
         }
-    }, [room])
+    }, [room, mode])
 
     return <canvas
         ref={ref}
@@ -64,7 +80,7 @@ export default function Room({ name }: { name: string }) {
             width: window.innerWidth,
             height: window.innerHeight,
             overflow: 'unset',
-            position : 'fixed'
+            position: 'fixed'
 
         }}
         onContextMenu={(ev) => ev.preventDefault()}
