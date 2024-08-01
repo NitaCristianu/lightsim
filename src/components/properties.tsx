@@ -14,7 +14,7 @@ export default function Properties() {
     ]);
 
     const [intensity, setIntensity] = useState(10);
-    const [angle, setAngle] = useState(0);
+    const [angle, setAngle] = useState(0.2);
     const [color, setColor] = useState("#ffffff");
     const [rotation, setRotation] = useState(0);
     const [option, setOption] = useState(0);
@@ -43,7 +43,6 @@ export default function Properties() {
     }, [selectedRects])
 
     useEffect(() => {
-        console.log(option)
         if (selectedRects.length > 0)
             setOption(selectedRects[selectedRects.length - 1].mat);
     }, [option, selectedRects])
@@ -167,7 +166,7 @@ export default function Properties() {
                             const val = ev.target.value;
                             setAngle(parseFloat(val))
                         }}
-                        min={0.1}
+                        min={0.0000001}
                         max={Math.PI}
                         step={0.001}
 
@@ -275,7 +274,8 @@ export default function Properties() {
                     value={option}
                     onChange={(ev) => {
                         const val = ev.target.value;
-                        setOption(parseInt(val));
+                        if (selectedRects.length > 0)
+                            selectedRects[selectedRects.length - 1].mat = parseInt(val) as any;
                     }}
 
                 >

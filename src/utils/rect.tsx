@@ -12,7 +12,7 @@ export class Rect {
     id;
     w;
     h;
-    mat: 0 | 1 | 2 | 3 = 1;
+    mat: 0 | 1 | 2 | 3 = 3;
     refractionIndex = -3.5; // glass
     selected = false;
     lastmpos = { x: 0, y: 0 }
@@ -137,13 +137,25 @@ export class Rect {
 
     draw(ctx: CanvasRenderingContext2D, deltaTime: number) {
         ctx.beginPath();
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "#1a1a1abb";
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 3;
         ctx.roundRect(this.x, this.y, this.w, this.h, 4)
+
         if (this.selected)
             ctx.stroke();
+        ctx.shadowBlur = 0;
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        const L = (this.w / 100).toFixed(2);
+        const h = (this.h / 100).toFixed(2);
+        const Ltext = ctx.measureText(L+"m");
+        const htext = ctx.measureText(h+"m");
+        ctx.fillText(L+"m", this.x + this.w / 2 - Ltext.width / 2, this.y - 10)
+        ctx.fillText(h+"m", this.x - htext.width , this.y + this.h/2)
     }
 
 }

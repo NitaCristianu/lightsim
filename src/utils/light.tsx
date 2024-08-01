@@ -9,9 +9,9 @@ export class Light {
     initialPosition = { x: 0, y: 0 }
     color = "#ffffff";
     inside = false;
-    angle = 0;
+    angle = 0.5;
     rotation = Math.PI/2;
-    rays = 1;
+    rays = 10;
     id;
     selected = false;
 

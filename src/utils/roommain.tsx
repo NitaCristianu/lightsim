@@ -40,13 +40,32 @@ export class RoomClass {
             window.innerHeight - PADDING * 2,
             ROUNDNESS
         );
-        ctx.fillStyle = "rgb(50, 50, 50)";
         ctx.strokeStyle = "rgb(200,200,200)";
         ctx.lineWidth = 1.5;
 
 
         ctx.fill();
         ctx.stroke();
+        ctx.fillStyle = "rgb(62, 62, 62)";
+
+        for (let i = 0; i < window.innerWidth; i += 50) {
+            for (let j = 0; j < window.innerHeight; j += 50) {
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.arc(i, j, 2, 0, 2 * Math.PI);
+                ctx.fill()
+            }
+
+        }
+
+        lights.forEach(light => {
+            ctx.beginPath();
+            ctx.shadowBlur = 280;
+            ctx.shadowColor = light.color;
+            ctx.fillStyle = light.color;
+            ctx.arc(light.initialPosition.x, light.initialPosition.y, 16, 0, 2 * Math.PI);
+            ctx.fill();
+        })
 
         rects.forEach(rect => {
             rect.draw(ctx, deltaTime);
