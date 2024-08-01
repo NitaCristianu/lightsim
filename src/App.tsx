@@ -1,3 +1,4 @@
+import Properties from "./components/properties";
 import Room from "./components/room";
 
 function App() {
@@ -8,8 +9,10 @@ function App() {
       }}
     >
       <Room
-        name="nastravan"
+        name="naztravan"
 
+      />
+      <Properties
       />
     </div>
   );

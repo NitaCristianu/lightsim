@@ -1,17 +1,20 @@
 import { RoomClass } from "./roommain";
 import { distSquare, reflect, refract } from "./utility";
+import { onProps } from "./vars";
 
 export class Light {
 
-    initialDirection = { x: 100, y: 0 }
     initialPosition = { x: 0, y: 0 }
     color = "#66ffbf";
     inside = false;
-    angle = 0.5;
+    angle = .3;
+    rotation = 210;
+    rays = 3;
     selected = false;
 
+    lastmpos = { x: 0, y: 0 }
+
     constructor(initialPosition: { x: number, y: number }, initialDirection: { x: number, y: number }) {
-        this.initialDirection = initialDirection;
         this.initialPosition = initialPosition;
     }
 
@@ -39,6 +42,24 @@ export class Light {
 
     }
 
+    recordMovement(room : RoomClass, mpos: { x: number, y: number }) {
+        if (this.selected && room.left && !room.placingRect && !onProps) {
+            var delta;
+            if (distSquare(this.lastmpos, {x : 0, y : 0}) == 0) delta = {x : 0, y : 0};
+            else delta = {x : mpos.x - this.lastmpos.x, y : mpos.y - this.lastmpos.y};
+            this.initialPosition = {
+                x : this.initialPosition.x + delta.x,
+                y : this.initialPosition.y + delta.y,
+            }
+            if (room.overlapsRects(this.initialPosition.x-8, this.initialPosition.y-8, 16, 16)){
+                this.inside = true;
+            }else{
+                this.inside = false;
+            }
+        }
+        this.lastmpos = mpos;
+    }
+
     recordClick(btn: 0 | 1 | 2, mpos: { x: number, y: number }) {
 
         if (btn == 0 && this.on(mpos)) {
@@ -48,12 +69,12 @@ export class Light {
         }
     }
 
-    drawLine(ctx: CanvasRenderingContext2D, room: RoomClass, position = this.initialPosition, direction = this.initialDirection, limit = 10, inside = this.inside) {
+    drawLine(ctx: CanvasRenderingContext2D, room: RoomClass, position = this.initialPosition, direction = { x: 1, y: 0 }, limit = 10, inside = this.inside) {
         if (limit <= 0) return;
         ctx.beginPath();
         ctx.shadowBlur = 20;
         ctx.strokeStyle = this.color + Math.floor((limit / 10) * 255).toString(16);
-        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowColor = ctx.strokeStyle + "aa";
         ctx.lineWidth = 3;
         ctx.moveTo(position.x, position.y);
 
@@ -68,20 +89,13 @@ export class Light {
             if (mat == 0 || mat == 2) {
                 var reflection = reflect(direction, normal);
                 if (inside) {
-                    reflection = {
-                        x: -reflection.x,
-                        y: -reflection.y
-                    }
-                }
+                    reflection =  reflect(direction, {x : -normal.x, y : -normal.y})               }
                 this.drawLine(ctx, room, end, reflection, limit - 1, inside);
             }
             if (mat == 1 || mat == 2) {
                 var refraction = refract(direction, normal, intersection.refractionIndex);
                 if (inside) {
-                    refraction = {
-                        x: -refraction.x,
-                        y: -refraction.y
-                    }
+                    refraction = refract(direction, {x : -normal.x, y : -normal.y}, intersection.refractionIndex);
                 }
                 if (refraction) {
                     this.drawLine(ctx, room, end, refraction, limit - 1, !inside)

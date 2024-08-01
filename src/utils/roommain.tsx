@@ -1,6 +1,7 @@
 import { lights, rects } from "./elements";
 import { Rect } from "./rect";
 import { distSquare } from "./utility";
+import { onProps } from "./vars";
 
 const PADDING = 50;
 const ROUNDNESS = 16;
@@ -10,6 +11,8 @@ export class RoomClass {
     name;
 
     // rect placement
+    left = false;
+    right = false;;
     placingRect = false;
     placingrectx = 0;
     placingrecty = 0;
@@ -48,10 +51,11 @@ export class RoomClass {
         })
 
         lights.forEach(light => {
-            for (let angle = -Math.PI; angle <= Math.PI; angle += Math.PI / 4) {
-                const x = Math.cos(angle) * light.angle;
-                const y = Math.sin(angle) * light.angle;
-                light.drawLine(ctx, this, light.initialPosition, { x: x + light.initialDirection.x, y: y + light.initialDirection.y });
+            for (let angle = -light.angle + light.rotation; angle <= light.angle + light.rotation; angle += Math.PI / light.rays / light.angle / 40) {
+
+                const x = Math.cos(angle);
+                const y = Math.sin(angle);
+                light.drawLine(ctx, this, light.initialPosition, { x, y });
             }
             light.update(ctx);
         })
@@ -138,10 +142,18 @@ export class RoomClass {
         return closestIntersection;
     }
 
+    recordMovement(mpos: { x: number, y: number }) {
+        lights.forEach(light => light.recordMovement(this, mpos));
+        rects.forEach(rect => rect.recordMovement(this, mpos));
+
+    }
+
     recordClick(btn: 0 | 1 | 2, mpos: { x: number, y: number }) {
+        if (onProps) return;
         const isOnGrid = this.isOnGrid();
 
         lights.forEach(light => light.recordClick(btn, mpos));
+        rects.forEach(rect => rect.recordClick(btn, this))
 
         if (btn == 0 && isOnGrid) {
             var { x, y } = mpos;

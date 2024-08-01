@@ -1,3 +1,4 @@
+import { RoomClass } from "./roommain";
 import { distSquare, intersectLines } from "./utility";
 
 const PADDING = 50;
@@ -10,6 +11,8 @@ export class Rect {
     h;
     mat: 0 | 1 | 2 | 3 = 1;
     refractionIndex = -3.5; // glass
+    selected = false;
+    lastmpos = { x: 0, y: 0 }
 
     /*
         mat
@@ -86,6 +89,26 @@ export class Rect {
         return { ...closest, mat: this.mat, refractionIndex: this.refractionIndex };
     }
 
+    recordClick(btn: 0 | 1 | 2, room: RoomClass) {
+        if (btn == 0 && room.mpos && this.inRect(room.mpos.x, room.mpos.y)) {
+            this.selected = true;
+        } else if (btn == 2) {
+            this.selected = false;
+        }
+    }
+
+    recordMovement(room: RoomClass, mpos: { x: number, y: number }) {
+        if (this.selected && room.left) {
+            var delta;
+            if (distSquare(this.lastmpos, { x: 0, y: 0 }) == 0) delta = { x: 0, y: 0 };
+            else delta = { x: mpos.x - this.lastmpos.x, y: mpos.y - this.lastmpos.y };
+            this.x = this.x + delta.x;
+            this.y = this.y + delta.y;
+
+        }
+        this.lastmpos = mpos;
+    }
+
     overlapRect(x: number, y: number, w: number, h: number) {
         return !(this.x + this.w <= x ||
             x + w <= this.x ||
@@ -96,7 +119,11 @@ export class Rect {
     draw(ctx: CanvasRenderingContext2D, deltaTime: number) {
         ctx.beginPath();
         ctx.fillStyle = "red";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
         ctx.roundRect(this.x, this.y, this.w, this.h, 4)
+        if (this.selected)
+            ctx.stroke();
         ctx.fill();
     }
 

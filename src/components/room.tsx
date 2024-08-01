@@ -21,13 +21,25 @@ export default function Room({ name }: { name: string }) {
     useAnimationFrame(update)
 
     useEffect(() => {
-        const mouseUp = (event : MouseEvent)=>{
-            room.recordClick(0, {x : event.clientX, y : event.clientY});
+        const mouseUp = (event: MouseEvent) => {
+            if (event.button == 2)
+                room.right = false
+            if (event.button == 0)
+                room.left = false
         };
-        const mouseMove = (event : MouseEvent)=>{
-            room.mpos = {x : event.clientX, y : event.clientY}
+        const mouseDown = (event: MouseEvent) => {
+            room.recordClick(event.button as any, { x: event.clientX, y: event.clientY });
+            if (event.button == 2)
+                room.right = true
+            if (event.button == 0)
+                room.left = true
+        }
+        const mouseMove = (event: MouseEvent) => {
+            room.mpos = { x: event.clientX, y: event.clientY };
+            room.recordMovement({ x: event.clientX, y: event.clientY });
         }
         window.addEventListener("mouseup", mouseUp);
+        window.addEventListener("mousedown", mouseDown)
         window.addEventListener("resize", () => {
             if (ref.current) {
                 ref.current.width = window.innerWidth;
@@ -39,8 +51,9 @@ export default function Room({ name }: { name: string }) {
             }
         });
         window.addEventListener("mousemove", mouseMove);
-        return ()=>{
+        return () => {
             window.removeEventListener("mouseup", mouseUp);
+            window.removeEventListener("mousedown", mouseDown);
             window.removeEventListener("mousemove", mouseMove);
         }
     }, [room])
@@ -51,8 +64,9 @@ export default function Room({ name }: { name: string }) {
             width: window.innerWidth,
             height: window.innerHeight,
             overflow: 'unset',
-            
+            position : 'fixed'
+
         }}
-        onContextMenu={(ev)=>ev.preventDefault()}
+        onContextMenu={(ev) => ev.preventDefault()}
     />
 }
